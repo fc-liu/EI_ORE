@@ -88,10 +88,10 @@ if __name__ == "__main__":
 
     if config.data_src == "ds":
         trexDataset = T_RExDataset(tokenizer,
-                                   "data/t-rex/json-ds-val.json", visual=True)
+                                   "data/t-rex/json-ds-test.json", visual=True)
     elif config.data_src == "spo":
         trexDataset = T_RExDataset(tokenizer,
-                                   "data/t-rex/json-spo-val.json", visual=True)
+                                   "data/t-rex/json-spo-test.json", visual=True)
 
     b3_prec, b3_rec, b3_f1, hom, com, v_f1, ari = evaluate(model, trexDataset)
     table.add_row([b3_prec, b3_rec, b3_f1, hom, com, v_f1, ari])

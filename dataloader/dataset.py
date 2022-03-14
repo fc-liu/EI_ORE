@@ -43,6 +43,8 @@ class T_RExDataset(data.Dataset):
             for line in tqdm(f.readlines(), postfix="load t-rex dataset"):
                 ins = json.loads(line)
                 rel = ins['rel']
+                if rel not in remain_relation:
+                    continue
                 if self.visual:
                     if rel not in remain_relation:
                         continue
@@ -66,37 +68,39 @@ class T_RExDataset(data.Dataset):
                         config.e11, config.e12], [config.e21, config.e22])
 
                 tokens.insert(0, config.cls)
+                if len(tokens)>config.max_sentence_length/2:
+                    continue
 
-                pos1 = [tokens.index(config.e11), tokens.index(config.e12)]
-                pos2 = [tokens.index(config.e21), tokens.index(config.e22)]
+                # pos1 = [tokens.index(config.e11), tokens.index(config.e12)]
+                # pos2 = [tokens.index(config.e21), tokens.index(config.e22)]
 
-                if len(tokens) >= self.max_length:
-                    max_right = max(pos2[-1], pos1[-1])
-                    min_left = min(pos1[0], pos2[0])
-                    gap_length = max_right-min_left
-                    if gap_length+3 > self.max_length:
-                        continue
-                        # tokens = [config.cls, config.e11, config.e12,
-                        #           config.e21, config.e22, config.sep]
-                    elif max_right+1 < self.max_length:
-                        tokens = tokens[:self.max_length-1]
-                    elif len(tokens)-min_left+1 < self.max_length:
-                        tokens = tokens[min_left:]
-                        tokens.insert(0, config.cls)
-                    else:
-                        tokens = tokens[min_left:max_right+1]
-                        tokens.insert(0, config.cls)
-                    pos1 = [tokens.index(config.e11), tokens.index(config.e12)]
-                    pos2 = [tokens.index(config.e21), tokens.index(config.e22)]
-                tokens.append(config.sep)
+                # if len(tokens) >= self.max_length:
+                #     max_right = max(pos2[-1], pos1[-1])
+                #     min_left = min(pos1[0], pos2[0])
+                #     gap_length = max_right-min_left
+                #     if gap_length+3 > self.max_length:
+                #         continue
+                #         # tokens = [config.cls, config.e11, config.e12,
+                #         #           config.e21, config.e22, config.sep]
+                #     elif max_right+1 < self.max_length:
+                #         tokens = tokens[:self.max_length-1]
+                #     elif len(tokens)-min_left+1 < self.max_length:
+                #         tokens = tokens[min_left:]
+                #         tokens.insert(0, config.cls)
+                #     else:
+                #         tokens = tokens[min_left:max_right+1]
+                #         tokens.insert(0, config.cls)
+                #     pos1 = [tokens.index(config.e11), tokens.index(config.e12)]
+                #     pos2 = [tokens.index(config.e21), tokens.index(config.e22)]
+                # tokens.append(config.sep)
 
-                ins['h'][-1] = pos1
-                ins['t'][-1] = pos2
-                ins["raw_tokens"] = ins['tokens']
-                ins['tokens'] = tokens
+                # ins['h'][-1] = pos1
+                # ins['t'][-1] = pos2
+                # ins["raw_tokens"] = ins['tokens']
+                # ins['tokens'] = tokens
 
-                if len(tokens) > self.max_length:
-                    raise Exception("sequence too long")
+                # if len(tokens) > self.max_length:
+                #     raise Exception("sequence too long")
                 data_list.append(ins)
         return data_list
 
@@ -110,13 +114,24 @@ class T_RExDataset(data.Dataset):
     def collate_fn(self, data):
         tokens, pos1, pos2, rel_id = zip(*data)
         tokens_dict = self.tokenizer(
-            tokens, add_special_tokens=False, is_split_into_words=True, return_tensors='pt', truncation=True, max_length=config.max_sentence_length, padding=True)
+            tokens, add_special_tokens=True, is_split_into_words=True, return_tensors='pt', truncation=True, max_length=config.max_sentence_length, padding=True)
         tokens_ids = tokens_dict['input_ids']
         mask = tokens_dict['attention_mask']
-        pos1 = torch.LongTensor(pos1)
-        pos2 = torch.LongTensor(pos2)
-
-        return tokens_ids, pos1, pos2, mask, rel_id, tokens
+        pos1_list=[]
+        pos2_list=[]
+        for idx in tokens_ids:
+            tokens=self.tokenizer.convert_ids_to_tokens(idx)
+            try:
+                pos1 = [tokens.index(config.e11), tokens.index(config.e12)]
+                pos2 = [tokens.index(config.e21), tokens.index(config.e22)]
+            except Exception as e:
+                pos1=[0,0]
+                pos2=[0,0]
+            pos1_list.append(pos1)
+            pos2_list.append(pos2)
+        pos1_list = torch.LongTensor(pos1_list)
+        pos2_list = torch.LongTensor(pos2_list)
+        return tokens_ids, pos1_list, pos2_list, mask, rel_id, tokens
 
 
 class NYT_FBDataset(data.Dataset):
@@ -617,6 +632,7 @@ if __name__ == "__main__":
     # print(end-start)
 
     nyt_file = "/home/liufangchao/projects/CausalRE/data/NYT-FB/candidate-2000s.context.filtered.triples.pathfiltered.pos.single-relation.sortedondate.txt"
+    nyt_file="/home/liufangchao/projects/CausalRE/data/NYT-FB/candidate-2000s.context.filtered.triples.pathfiltered.pos.single-relation.sortedondate.validation.20%.txt"
     # rel=set()
     # with open(nyt_file, 'r', encoding = "ISO-8859-1") as f:
     #     lines=f.readlines()
@@ -628,4 +644,4 @@ if __name__ == "__main__":
 
     # print("\n".join(rel))
     # print(len(rel))
-    # dataset = NYT_FBDataset(tokenizer, nyt_file)
+    dataset = NYT_FBDataset(tokenizer, nyt_file)
