@@ -1,0 +1,11 @@
+data/*
+data_processing/trex_to_ttsv.cpp
+data_processing/elasticsearch_client.py
+data_processing/search.py
+__pycache__/*
+*/__pycache__/*
+.vscode/*
+info.log
+figures/*
+out/*
+checkpoint/*

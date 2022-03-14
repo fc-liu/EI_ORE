@@ -1,0 +1,20 @@
+{
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#b3fd87",
+        "activityBar.activeBorder": "#629cfc",
+        "activityBar.background": "#b3fd87",
+        "activityBar.foreground": "#15202b",
+        "activityBar.inactiveForeground": "#15202b99",
+        "activityBarBadge.background": "#629cfc",
+        "activityBarBadge.foreground": "#15202b",
+        "statusBar.background": "#93fc55",
+        "statusBar.foreground": "#15202b",
+        "statusBarItem.hoverBackground": "#73fb23",
+        "titleBar.activeBackground": "#93fc55",
+        "titleBar.activeForeground": "#15202b",
+        "titleBar.inactiveBackground": "#93fc5599",
+        "titleBar.inactiveForeground": "#15202b99"
+    },
+    "peacock.remoteColor": "#93fc55",
+    "python.pythonPath": "/home/liufangchao/anaconda3/envs/py36/bin/python"
+}
